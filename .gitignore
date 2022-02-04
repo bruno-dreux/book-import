@@ -1,3 +1,9 @@
+# Files added by BDR
+secrets.yml
+
+
+
+# Standard gitignore files for python
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
