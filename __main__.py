@@ -1,8 +1,9 @@
-
+import goodreadsParser
 
 def main():
     print("Hello world!")
 
+    goodreadsParser.parse()
 
 
 
