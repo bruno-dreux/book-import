@@ -1,9 +1,18 @@
 import goodreadsParser
+import yaml
+
 
 def main():
-    print("Hello world!")
+    #Reading params
+    paramsFile = open("params.yml")
+    parsedParams = yaml.load(paramsFile, Loader = yaml.FullLoader)
+    goodreadsParserParams = parsedParams['goodreadsParserParams']
 
-    goodreadsParser.parse()
+    #Fetching and parsing books
+    parser = goodreadsParser.GoodreadsParser(goodreadsParserParams)
+    parser.parse()
+    df = parser.getParsedBooks()
+    print(df)
 
 
 

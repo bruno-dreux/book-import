@@ -1,34 +1,54 @@
 from bs4 import BeautifulSoup
 import requests
 import codecs
+import pandas as pd
+class GoodreadsParser():
+    def __init__(self,params):
+        self.booksDf = pd.DataFrame()
+        self.params = params
 
-def parse():
+    def getParsedBooks(self):
+        return self.booksDf
 
-    #Code to get the page from the URL
-    # url = 'https://www.goodreads.com/review/list/75444766-bruno-dreux?utf8=%E2%9C%93&ref=nav_mybooks&per_page=20'
-    # r = requests.get(url)
-    # html_doc = r.text
+    def parse(self):
+        
+        #Code to get the page from the URL
+        url = self.params['goodreadsURL']
+        # r = requests.get(url)
+        # html_doc = r.text
+        
+        #Temporary code, loading from a saved html
+        html_doc = codecs.open("example.html", 'r')
 
-    #Temporary code, loading from a saved html
-    html_doc = codecs.open("example.html", 'r')
+        soup = BeautifulSoup(html_doc, 'html.parser')
+        # print(soup.prettify())
 
-    soup = BeautifulSoup(html_doc, 'html.parser')
-    # print(soup.prettify())
-
-    booksBody = soup.find("tbody",id="booksBody")
-    for book in booksBody.find_all("tr"):
-        # print(book.prettify())
-        parseBook(book)
+        booksBody = soup.find("tbody",id="booksBody")
+        for book in booksBody.find_all("tr"):
+            # print(book.prettify())
+            dict = parseBook(book)
+            self.booksDf = self.booksDf.append(dict, ignore_index=True)
+        return
 
 def parseBook(book):
-    title = book.find("td", attrs={"class": "field title"}).div.a.get_text()
-    author = book.find("td", attrs={"class": "field author"}).div.a.get_text()
-    avgRating = book.find("td", attrs={"class": "field avg_rating"}).div.get_text()
-    shelf = book.find("td", attrs={"class": "field shelves"}).div.span.a.get_text()
-    dateStarted = book.find("td", attrs={"class": "field date_started"}).div.div.div.span.get_text()
-    dateRead = book.find("td", attrs={"class": "field date_read"}).div.div.div.span.get_text()
-    dateAdded = book.find("td", attrs={"class": "field date_added"}).div.span.get_text()
-    cover = book.find("td", attrs={"class": "field cover"}).div.div.a.img['src']
+    dict = {}
+    dict['title'] = str(book.find("td", attrs={"class": "field title"}).div.a.get_text())
+    dict['author'] = str(book.find("td", attrs={"class": "field author"}).div.a.get_text())
+    dict['avgRating'] = str(book.find("td", attrs={"class": "field avg_rating"}).div.get_text())
+    dict['shelf'] = str(book.find("td", attrs={"class": "field shelves"}).div.span.a.get_text())
+    dict['dateStarted'] = str(book.find("td", attrs={"class": "field date_started"}).div.div.div.span.get_text())
+    dict['dateRead'] = str(book.find("td", attrs={"class": "field date_read"}).div.div.div.span.get_text())
+    dict['dateAdded'] = str(book.find("td", attrs={"class": "field date_added"}).div.span.get_text())
+    dict['cover'] = str(book.find("td", attrs={"class": "field cover"}).div.div.a.img['src'])
+
+    return dict
+
+
+  
+
+    
+
+
 
 
 
