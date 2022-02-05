@@ -1,5 +1,6 @@
 import goodreadsParser
 import yaml
+import notionWriter
 
 
 def main():
@@ -8,11 +9,21 @@ def main():
     parsedParams = yaml.load(paramsFile, Loader = yaml.FullLoader)
     goodreadsParserParams = parsedParams['goodreadsParserParams']
 
+    #Reading secrets
+    secretsFile = open("secrets.yml")
+    parsedSecrets = yaml.load(secretsFile, Loader = yaml.FullLoader)
+    notionToken = parsedSecrets['notion_token']
+    notionDatabaseID = parsedSecrets['notion_databaseID']
+
     #Fetching and parsing books
     parser = goodreadsParser.GoodreadsParser(goodreadsParserParams)
     parser.parse()
     df = parser.getParsedBooks()
     print(df)
+
+    #Writing to Notion
+    notion = notionWriter.NotionWriter(notionToken,notionDatabaseID)
+    notion.getDatabase()
 
 
 
