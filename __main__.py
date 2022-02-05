@@ -23,12 +23,31 @@ def main():
 
     #Writing to Notion
     notion = notionWriter.NotionWriter(notionToken,notionDatabaseID)
-    notion.getDatabase()
 
+    rowDict = {
+        'Title': 'Teste pra ir dormir',
+        'Author': 'Teste autor',
+        'Status': 'Read',
+        'Rating': 5,
+        'Date Started': '2022-02-03',
+        'Date Finished': '2022-02-04',
+        'Date Added': '2022-02-05',
+        'Cover': 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1598580480l/55148500._SY475_.jpg'
+    }
 
+    notion.addRow(rowDict)
 
 
 
 if __name__ == '__main__':
     # execute only if run as the entry point into the program
     main()
+
+
+#TODO
+#Write a converter that takes in a goodreads format df and create a Notion format df
+    #Converter needs to handle dates
+    #Converter could get the image in higher-res (nice to have)
+#Adjust main to convert output and send to Notion
+#Adjust goodreadsParser to look in more pages
+#Adjust notionWriter to verify if title is already in library before writing
