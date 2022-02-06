@@ -1,6 +1,7 @@
 import requests
 import json
 import pandas as pd
+from pyshorteners import Shortener
 
 class NotionWriter():
     def __init__(self, token, databaseID):
@@ -11,6 +12,9 @@ class NotionWriter():
                         "Notion-Version": "2021-08-16"}
         self.notionDb = pd.DataFrame()
         self.goodreadsDb = pd.DataFrame()
+        self.addedBooks = 0
+        self.updatedBooks = 0
+        self.noChangeBooks = 0
 
     def getDatabase(self):
         url = 'https://api.notion.com/v1/databases/'+self.databaseID+'/query'
@@ -45,16 +49,87 @@ class NotionWriter():
         print("Starting to push books to Notion...")
         for book in listOfDicts:
             print("     Pushing book: "+book['Title'])
-            self.addRow(book)
+            self.updateOrAddRow(book)
+        print("Update complete! Total of "+str(self.addedBooks+self.noChangeBooks+self.updatedBooks)+" books processes from Goodreads.")
+        print("Added "+str(self.addedBooks)+" books. Updated "+str(self.updatedBooks)+" books. Did not change "+str(self.noChangeBooks)+" books in DB.")
         
+    def updateOrAddRow(self,rowDict):
+        isInNotionDb = self.findAndUpdate(rowDict)
+
+        if isInNotionDb == False:
+            self.addRow(rowDict)
+
+    def findAndUpdate(self,rowDict):
+        url = 'https://api.notion.com/v1/databases/'+self.databaseID+'/query'
+        requestBody = self.createFindRequestBody(rowDict)
+        
+        dbJson = self.callNotionAPI(url,requestBody)
+        pageJson = dbJson['results']
+
+        if (len(pageJson)==0):
+            #Book not found in Notion DB
+            # print("Book not in DB. Adding...")
+            return False
+
+        else:
+            #Book is in DB
+            pageJson = pageJson[0] #Gets the first element of the 1-sized list
+            
+            if self.checkNeedForUpdate(rowDict,pageJson):
+                #Update
+                # print("Update needed!")
+                self.updateBook(pageJson['id'],rowDict)
+                return True
+
+            else:  #No need to update, everything up to date
+                # print("Everything up to date, moving on...")
+                self.noChangeBooks += 1
+                return True
+        
+        return False
+
+    def checkNeedForUpdate(self,rowDict,pageJson):
+        #Get properties to see if an update is needed
+        notionDbDict = {}
+        notionDbDict['Status'] = pageJson['properties']['Status']['select']['name']
+        try:
+            notionDbDict['Date Started'] = pageJson['properties']['Date Started']['date']['start']
+        except:
+            notionDbDict['Date Started'] = None
+        try:
+            notionDbDict['Date Finished'] = pageJson['properties']['Date Finished']['date']['start']
+        except:
+            notionDbDict['Date Finished'] = None
+        try:
+            notionDbDict['Date Added'] = pageJson['properties']['Date Added']['date']['start']
+        except:
+            notionDbDict['Date Added'] = None
+
+        needUpdate = False
+        for key, value in notionDbDict.items():
+            # print(rowDict[key])
+            # print(notionDbDict[key])
+            if notionDbDict[key] != rowDict[key]:
+                needUpdate = True
+        return needUpdate
 
     def addRow(self,rowDict):
         url = "https://api.notion.com/v1/pages/"
         jsonRow = self.rowToJson(rowDict)
         self.callNotionAPI(url,jsonRow)
+        self.addedBooks += 1
 
-    def callNotionAPI(self, url, body):
-        res = requests.request("POST",url,data=body,headers=self.headers)
+    def updateBook(self,bookID,rowDict):
+        # print(bookID)
+        propertiesPayload = self.createJsonForUpdate(rowDict)
+        url = "https://api.notion.com/v1/pages/"+bookID
+        self.callNotionAPI(url,propertiesPayload,"PATCH")
+        self.updatedBooks += 1
+        # print("Book updated!")
+        return
+
+    def callNotionAPI(self, url, body,requestType="POST"):
+        res = requests.request(requestType,url,data=body,headers=self.headers)
         if res.status_code == 200:
             response = json.loads(res.text)
             return response
@@ -64,82 +139,172 @@ class NotionWriter():
             return
 
     def rowToJson(self, rowDict):
+        propertiesDict = {
+            'Title': {
+                'title': [
+                    {
+                        'text': {
+                            'content': rowDict['Title']
+                        }
+                    }
+                ]
+            },
+            "Author": {
+                "type": "rich_text",
+                "rich_text": [
+                    {
+                        "type": "text",
+                        "text": {
+                            "content": rowDict['Author'],
+                            "link": None
+                        }
+                    }
+                ]
+            },
+            "Status": {
+                "type": "select",
+                "select": {
+                    "name": rowDict['Status']
+                }
+            },
+            "Type": {
+                "type": "select",
+                "select": {
+                    "name": "Book"
+                }
+            },
+            "Rating": {
+                "type": "number",
+                "number": rowDict['Rating']
+            },
+            "Cover": {
+                "type": "files",
+                "files": [
+                    {
+                        "name": rowDict['Title'][0:99],
+                        "type": "external",
+                        "external": {
+                            "url": rowDict['Cover']
+                        }
+                    }
+                ]
+            }
+        }
+
+        if rowDict['Date Started'] != None:
+            propertiesDict["Date Started"] = {
+                "type": "date",
+                "date": {
+                    "start": rowDict['Date Started'],
+                    "end": None,
+                    "time_zone": None
+                }
+            }
+
+        if rowDict['Date Added'] != None:
+            propertiesDict["Date Added"] = {
+                "type": "date",
+                "date": {
+                    "start": rowDict['Date Added'],
+                    "end": None,
+                    "time_zone": None
+                }
+            }
+
+        if rowDict['Date Finished'] != None:
+            propertiesDict["Date Finished"] = {
+                "type": "date",
+                "date": {
+                    "start": rowDict['Date Finished'],
+                    "end": None,
+                    "time_zone": None
+                }
+            }
+        
         newDict = {
             'parent': {
                 'database_id': self.databaseID
             },
-            'properties': {
-                'Title': {
-                    'title': [
-                        {
-                            'text': {
-                                'content': rowDict['Title']
-                            }
-                        }
-                    ]
-                },
-                "Author": {
-                    "type": "rich_text",
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": rowDict['Author'],
-                                "link": None
-                            }
-                        }
-                    ]
-                },
-                "Status": {
-                    "type": "select",
-                    "select": {
-                        "name": rowDict['Status']
-                    }
-                },
-                "Rating": {
-                    "type": "number",
-                    "number": rowDict['Rating']
-                },
-                "Date Started": {
-                    "type": "date",
-                    "date": {
-                        "start": rowDict['Date Started'],
-                        "end": None,
-                        "time_zone": None
-                    }
-                },
-                "Date Finished": {
-                    "type": "date",
-                    "date": {
-                        "start": rowDict['Date Finished'],
-                        "end": None,
-                        "time_zone": None
-                    }
-                },
-                "Date Added": {
-                    "type": "date",
-                    "date": {
-                        "start": rowDict['Date Added'],
-                        "end": None,
-                        "time_zone": None
-                    }
-                },
-                "Cover": {
-                    "type": "files",
-                    "files": [
-                        {
-                            "name": rowDict['Title'],
-                            "type": "external",
-                            "external": {
-                                "url": rowDict['Cover']
-                            }
-                        }
-                    ]
-                }
-            }
+            'properties': propertiesDict
         }
 
         jsonRow = json.dumps(newDict)
+        # print(jsonRow)
+        return(jsonRow)
+
+    def createJsonForUpdate(self, rowDict):
+        propertiesDict = {
+            "Status": {
+                "type": "select",
+                "select": {
+                    "name": rowDict['Status']
+                }
+            },
+            "Rating": {
+                "type": "number",
+                "number": rowDict['Rating']
+            }
+        }
+
+        if rowDict['Date Started'] != None:
+            propertiesDict["Date Started"] = {
+                "type": "date",
+                "date": {
+                    "start": rowDict['Date Started'],
+                    "end": None,
+                    "time_zone": None
+                }
+            }
+
+        if rowDict['Date Added'] != None:
+            propertiesDict["Date Added"] = {
+                "type": "date",
+                "date": {
+                    "start": rowDict['Date Added'],
+                    "end": None,
+                    "time_zone": None
+                }
+            }
+
+        if rowDict['Date Finished'] != None:
+            propertiesDict["Date Finished"] = {
+                "type": "date",
+                "date": {
+                    "start": rowDict['Date Finished'],
+                    "end": None,
+                    "time_zone": None
+                }
+            }
+        
+        newDict = {
+            'properties': propertiesDict
+        }
+
+        jsonForUpdate = json.dumps(newDict)
+        # print(jsonRow)
+        return(jsonForUpdate)
+
+    def createFindRequestBody(self, rowDict):
+        filterDict = {
+            "filter": {
+                "and": [
+                    {
+                        "property": "Title",
+                        "text": {
+                            "equals": rowDict['Title']
+                        }
+                    },
+                    {
+                        "property": "Author",
+                        "text": {
+                            "equals": rowDict['Author']
+                        }
+                    }
+                ]
+            }
+        }
+
+        jsonRow = json.dumps(filterDict)
         # print(jsonRow)
         return(jsonRow)
 
@@ -150,7 +315,17 @@ def invertAuthor(author):
     return firstName + ' ' + lastName
     
 def getImprovedPictureURL(pictureURL):
-    return pictureURL
+        pictureURL = pictureURL.replace("._SY75_","")
+        pictureURL = pictureURL.replace("._SX50_","")
+
+        if len(pictureURL) > 100:
+            print(pictureURL)
+            urlShortener = Shortener()
+            pictureURL = urlShortener.tinyurl.short(pictureURL)
+            print(pictureURL)
+
+        return pictureURL
+
 
 def convertStatus(shelf):
     dict = {
@@ -168,7 +343,7 @@ def convertStatus(shelf):
 def convertDate(date):
     convertedDate = date
     if date == "not set":
-        convertedDate = ""
+        convertedDate = None
     else:
         year = date.strip()[-4:]
         month = monthToNumerical(date.strip()[0:3])

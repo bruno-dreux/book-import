@@ -12,9 +12,10 @@ class GoodreadsParser():
 
     def parseGoodreads(self):
         for name, URL in self.params['goodreadsURLs'].items():
-            # print("Parsing shelf "+name+"...")
+            print("Parsing shelf "+name+"...")
             self.parseShelf(URL, name)
-            # print('Parsed ' + str(len(self.booksDf[self.booksDf['shelf']==name].index)) + ' books in shelf '+name)
+            print('Parsed ' + str(len(self.booksDf[self.booksDf['shelf']==name].index)) + ' books in shelf '+name)
+        print('Parsed a total of ' + str(len(self.booksDf.index)) + ' books from Goodreads.')
 
 
     def parseShelf(self,shelfURL, shelfName):

@@ -1,6 +1,0 @@
-goodreadsParserParams:
-  goodreadsURLs:
-    read: 'https://www.goodreads.com/review/list/75444766-bruno-dreux?ref=nav_mybooks&shelf=read'
-    reading: 'https://www.goodreads.com/review/list/75444766-bruno-dreux?ref=nav_mybooks&shelf=currently-reading'
-    toRead: 'https://www.goodreads.com/review/list/75444766-bruno-dreux?ref=nav_mybooks&shelf=to-read'
-    dropped: 'https://www.goodreads.com/review/list/75444766-bruno-dreux?ref=nav_mybooks&shelf=started-and-dropped'
