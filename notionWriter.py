@@ -40,7 +40,12 @@ class NotionWriter():
         # print (nDb)
         self.notionDb = nDb
         
-
+    def updateNotion(self):
+        listOfDicts = self.notionDb.to_dict(orient='records')
+        for book in listOfDicts:
+            print(book)
+            self.addRow(book)
+        
 
     def addRow(self,rowDict):
         url = "https://api.notion.com/v1/pages/"

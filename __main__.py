@@ -25,7 +25,7 @@ def main():
     notion = notionWriter.NotionWriter(notionToken,notionDatabaseID)
     notion.setGoodreadsDb(df)
     notion.convert()
-    # notion.updateNotion()
+    notion.updateNotion()
 
     # rowDict = {
     #     'Title': 'Teste pra ir dormir',
