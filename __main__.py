@@ -22,10 +22,10 @@ def main():
     # print(df)
 
     #Writing to Notion
-    notion = notionWriter.NotionWriter(notionToken,notionDatabaseID)
-    notion.setGoodreadsDb(df)
-    notion.convert()
-    notion.updateNotion()
+    # notion = notionWriter.NotionWriter(notionToken,notionDatabaseID)
+    # notion.setGoodreadsDb(df)
+    # notion.convert()
+    # notion.updateNotion()
 
     # Test code
     # rowDict = {
@@ -49,9 +49,7 @@ if __name__ == '__main__':
 
 
 #TODO
-
 #Fix lengths > 100 characters issue in goodreadsAPI
-#Adjust goodreadsParser to look in more pages for each shelf
 #Converter could get the image in higher-res (nice to have)
 #Adjust notionWriter to verify if title is already in library before writing
     #If in library, just update the status

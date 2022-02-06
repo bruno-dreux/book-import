@@ -12,27 +12,36 @@ class GoodreadsParser():
 
     def parseGoodreads(self):
         for name, URL in self.params['goodreadsURLs'].items():
-            print("Parsing shelf "+name+"...")
+            # print("Parsing shelf "+name+"...")
             self.parseShelf(URL, name)
+            # print('Parsed ' + str(len(self.booksDf[self.booksDf['shelf']==name].index)) + ' books in shelf '+name)
 
 
     def parseShelf(self,shelfURL, shelfName):
-        #Code to get the page from the URL
-        # print(shelfURL)
-        # print(shelfName)
-        r = requests.get(shelfURL)
-        html_doc = r.text
-        # print(html_doc)
+        continueParsing = True
+        page=1
 
-        soup = BeautifulSoup(html_doc, 'html.parser')
-        # print(soup.prettify())
+        while continueParsing:
+            shelfURL = shelfURL + '&page='+str(page)
+            # print("Parsing page " + str(page) + ' in shelf ' + shelfName)
+            continueParsing = self.parsePage(shelfURL,shelfName)
+            page+=1
+
+        return
+
+    def parsePage(self,pageURL,shelfName):
+        pageHasBooks = False
+        r = requests.get(pageURL)
+        htmlDoc = r.text
+
+        soup = BeautifulSoup(htmlDoc, 'html.parser')
 
         booksBody = soup.find("tbody",id="booksBody")
         for book in booksBody.find_all("tr"):
-            # print(book.prettify())
+            pageHasBooks = True
             dict = parseBook(book, shelfName)
             self.booksDf = self.booksDf.append(dict, ignore_index=True)
-        return
+        return pageHasBooks
 
 def parseBook(book, shelfName):
     dict = {}
@@ -56,7 +65,3 @@ def parseBook(book, shelfName):
 
 
 
-# TO DO
-# Get larger images for book covers. There may be a way of changing the URL (example below):
-# https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1598580480l/55148500._SY75_.jpg
-# https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1598580480l/55148500._SY475_.jpg
