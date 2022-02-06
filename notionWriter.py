@@ -42,8 +42,9 @@ class NotionWriter():
         
     def updateNotion(self):
         listOfDicts = self.notionDb.to_dict(orient='records')
+        print("Starting to push books to Notion...")
         for book in listOfDicts:
-            print(book)
+            print("     Pushing book: "+book['Title'])
             self.addRow(book)
         
 
@@ -154,8 +155,9 @@ def getImprovedPictureURL(pictureURL):
 def convertStatus(shelf):
     dict = {
         'read': 'Read',
-        'to-read': 'To Read',
-        'started-and-dropped': 'Dropped'
+        'toRead': 'To Read',
+        'dropped': 'Dropped',
+        'reading': 'Reading'
     }
     
     if shelf.find(",") != -1:  # Protection against multiple statuses, using the first one

@@ -17,7 +17,7 @@ def main():
 
     #Fetching and parsing books
     parser = goodreadsParser.GoodreadsParser(goodreadsParserParams)
-    parser.parse()
+    parser.parseGoodreads()
     df = parser.getParsedBooks()
     # print(df)
 
@@ -27,6 +27,7 @@ def main():
     notion.convert()
     notion.updateNotion()
 
+    # Test code
     # rowDict = {
     #     'Title': 'Teste pra ir dormir',
     #     'Author': 'Teste autor',
@@ -49,7 +50,14 @@ if __name__ == '__main__':
 
 #TODO
 
-#Adjust main to convert output and send to Notion
-#Adjust goodreadsParser to look in more pages
+#Fix lengths > 100 characters issue in goodreadsAPI
+#Adjust goodreadsParser to look in more pages for each shelf
+#Converter could get the image in higher-res (nice to have)
 #Adjust notionWriter to verify if title is already in library before writing
-    #Converter could get the image in higher-res (nice to have)
+    #If in library, just update the status
+#Add a column type to the DB, and always fill it with "Book"
+
+
+# Get larger images for book covers. There may be a way of changing the URL (example below):
+# https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1598580480l/55148500._SY75_.jpg
+# https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1598580480l/55148500._SY475_.jpg
