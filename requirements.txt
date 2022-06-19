@@ -1,0 +1,6 @@
+requests
+pyyaml
+datetime
+bs4
+pandas
+pyshorteners

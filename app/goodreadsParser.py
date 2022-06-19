@@ -1,6 +1,5 @@
 from bs4 import BeautifulSoup
 import requests
-import codecs
 import pandas as pd
 class GoodreadsParser():
     def __init__(self,params):

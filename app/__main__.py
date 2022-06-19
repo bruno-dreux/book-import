@@ -3,7 +3,7 @@ import yaml
 import notionWriter
 
 
-def main():
+def main(event, context):
     #Reading secrets
     secretsFile = open("secrets.yml")
     parsedSecrets = yaml.load(secretsFile, Loader = yaml.FullLoader)
@@ -25,6 +25,6 @@ def main():
 
 
 
-if __name__ == '__main__':
-    # execute only if run as the entry point into the program
-    main()
+# if __name__ == '__main__':
+#     # execute only if run as the entry point into the program
+#     main()

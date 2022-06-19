@@ -48,7 +48,7 @@ class NotionWriter():
         listOfDicts = self.notionDb.to_dict(orient='records')
         print("Starting to push books to Notion...")
         for book in listOfDicts:
-            print("     Pushing book: "+book['Title'])
+            # print("     Pushing book: "+book['Title'])
             self.updateOrAddRow(book)
         print("Update complete! Total of "+str(self.addedBooks+self.noChangeBooks+self.updatedBooks)+" books processes from Goodreads.")
         print("Added "+str(self.addedBooks)+" books. Updated "+str(self.updatedBooks)+" books. Did not change "+str(self.noChangeBooks)+" books in DB.")
